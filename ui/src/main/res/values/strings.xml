@@ -1,0 +1,7 @@
+<resources>
+    <string name="main_screen_search_watch_results">К результатам</string>
+    <string name="main_screen_search_film_card_watch">Смотреть</string>
+    <string name="main_screen_search_filter_all_results">Все результаты</string>
+    <string name="main_screen_search_filter_online_cinema">Онлайн-кинотеатр</string>
+    <string name="main_screen_search_title">Фильмы, сериалы, персоны</string>
+</resources>
