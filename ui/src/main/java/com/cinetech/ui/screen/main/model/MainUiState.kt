@@ -6,6 +6,7 @@ import com.cinetech.ui.base.Reducer
 
 data class MainUiState(
     val movies: SearchMoviePageable? = null,
+    val searchHistory: List<SearchHistory> = emptyList(),
     val searchText: String = "",
     val isSearchFilterVisible: Boolean = false,
     val searchInProgress: Boolean = false,

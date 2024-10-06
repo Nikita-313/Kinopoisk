@@ -1,11 +1,15 @@
 package com.cinetech.kinopoisk.di
 
+import android.content.Context
+import androidx.room.Room
+import com.cinetech.data.local.AppDatabase
 import com.cinetech.data.network.MovieService
 import com.cinetech.data.repository.NetworkMovieRepositoryImp
 import com.cinetech.domain.repository.NetworkMovieRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -16,6 +20,16 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 @Module
 class DataModule {
+
+    @Provides
+    @Singleton
+    fun database(@ApplicationContext appContext: Context): AppDatabase {
+        return Room.databaseBuilder(
+            appContext,
+            AppDatabase::class.java,
+            "Kinopoisk"
+        ).build()
+    }
 
     @Provides
     @Singleton

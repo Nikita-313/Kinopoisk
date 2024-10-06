@@ -8,7 +8,6 @@ import com.cinetech.domain.repository.NetworkMovieRepository
 import com.cinetech.ui.base.BaseViewModel
 import com.cinetech.ui.screen.main.model.MainUiEffect
 import com.cinetech.ui.screen.main.model.MainUiEvent
-import com.cinetech.ui.screen.main.model.MainUiReducer
 import com.cinetech.ui.screen.main.model.MainUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job

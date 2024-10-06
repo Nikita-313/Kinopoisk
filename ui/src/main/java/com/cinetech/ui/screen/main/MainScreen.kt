@@ -110,7 +110,6 @@ fun MainScreen(
                 FilmCard(state.movies!!.docs[it])
             }
 
-
             if (state.movies?.docs?.isNotEmpty() == true)
                 item {
                     Button(
@@ -126,6 +125,9 @@ fun MainScreen(
         }
     }
 }
+
+
+
 
 @Composable
 private fun FilmCard(

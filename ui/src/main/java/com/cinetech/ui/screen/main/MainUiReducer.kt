@@ -1,6 +1,9 @@
-package com.cinetech.ui.screen.main.model
+package com.cinetech.ui.screen.main
 
 import com.cinetech.ui.base.Reducer
+import com.cinetech.ui.screen.main.model.MainUiEffect
+import com.cinetech.ui.screen.main.model.MainUiEvent
+import com.cinetech.ui.screen.main.model.MainUiState
 
 class MainUiReducer : Reducer<MainUiState, MainUiEvent, MainUiEffect> {
     override fun reduce(previousState: MainUiState, event: MainUiEvent): Pair<MainUiState, MainUiEffect?> {
