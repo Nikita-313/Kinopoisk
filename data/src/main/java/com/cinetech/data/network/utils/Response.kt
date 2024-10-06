@@ -1,4 +1,4 @@
-package com.cinetech.data.network.model
+package com.cinetech.data.network.utils
 
 sealed class Response<T> {
     data object Loading : Response<Nothing>()
