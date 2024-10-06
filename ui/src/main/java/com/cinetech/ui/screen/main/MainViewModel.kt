@@ -2,8 +2,11 @@ package com.cinetech.ui.screen.main
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.cinetech.domain.models.PreviewMovie
 import com.cinetech.domain.models.Response
+import com.cinetech.domain.models.SearchHistory
 import com.cinetech.domain.models.SearchMoviesByNameParam
+import com.cinetech.domain.repository.LocalSearchHistoryRepository
 import com.cinetech.domain.repository.NetworkMovieRepository
 import com.cinetech.ui.base.BaseViewModel
 import com.cinetech.ui.screen.main.model.MainUiEffect
@@ -17,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
-    private val networkMovieRepository: NetworkMovieRepository
+    private val networkMovieRepository: NetworkMovieRepository,
+    private val localSearchHistoryRepository: LocalSearchHistoryRepository
 ) : BaseViewModel<MainUiState, MainUiEvent, MainUiEffect>(
     initialState = MainUiState(),
     reducer = MainUiReducer(),
@@ -25,9 +29,39 @@ class MainViewModel @Inject constructor(
 
     private var searchMovieJob: Job? = null
 
+    init {
+        subscribeLocalSearchHistory()
+    }
+
     fun onSearchTextChange(newText: String) {
         sendEvent(MainUiEvent.OnSearchTextChange(newText))
         searchMovie(newText)
+    }
+
+    fun saveTextHistory(text: String) {
+        val textForSave = SearchHistory.Text(text = text, searchTimeMs = System.currentTimeMillis())
+        viewModelScope.launch {
+            localSearchHistoryRepository.saveTextSearchHistory(textForSave)
+        }
+    }
+
+    fun saveMovieHistory(movie: PreviewMovie) {
+        val movieForSave = SearchHistory.Movie(previewMovie = movie, searchTimeMs = System.currentTimeMillis())
+        viewModelScope.launch {
+            localSearchHistoryRepository.saveMoviesSearchHistory(movieForSave)
+        }
+    }
+
+    fun deleteTextHistory(text: String) {
+        viewModelScope.launch {
+            localSearchHistoryRepository.deleteTextSearchHistory(text)
+        }
+    }
+
+    fun deleteMovieHistory(movieId: Long) {
+        viewModelScope.launch {
+            localSearchHistoryRepository.deleteMoviesSearchHistory(movieId)
+        }
     }
 
     private fun searchMovie(name: String) {
@@ -35,7 +69,7 @@ class MainViewModel @Inject constructor(
         searchMovieJob?.cancel()
         sendEvent(MainUiEvent.MoviesLoading(false))
 
-        if(name == "") {
+        if (name == "") {
             sendEvent(MainUiEvent.UpdateMovies(null))
             return
         }
@@ -46,7 +80,7 @@ class MainViewModel @Inject constructor(
             networkMovieRepository.searchMovieByName(searchMovieParams).collect { response ->
                 when (response) {
                     is Response.Error -> {
-                        Log.e("MainViewModel searchMovie",response.throwable.toString())
+                        Log.e("MainViewModel searchMovie", response.throwable.toString())
                         sendEvent(MainUiEvent.MoviesLoading(false))
                     }
 
@@ -56,14 +90,29 @@ class MainViewModel @Inject constructor(
 
                     is Response.Success -> {
                         sendEvent(MainUiEvent.MoviesLoading(false))
-                        sendEvent(MainUiEvent.UpdateMovies(response.result))
+                        sendEventForEffect(MainUiEvent.UpdateMovies(response.result))
                     }
+
                     Response.Timeout -> {
                         sendEvent(MainUiEvent.MoviesLoading(false))
                     }
                 }
             }
         }
+    }
+
+    private fun subscribeLocalSearchHistory() {
+        viewModelScope.launch {
+            localSearchHistoryRepository.subscribeTextSearchHistory().collect {
+                sendEvent(MainUiEvent.UpdateSearchHistoryText(it))
+            }
+        }
+        viewModelScope.launch {
+            localSearchHistoryRepository.subscribeMoviesSearchHistory().collect {
+                sendEvent(MainUiEvent.UpdateSearchHistoryMovie(it))
+            }
+        }
+
     }
 
 }

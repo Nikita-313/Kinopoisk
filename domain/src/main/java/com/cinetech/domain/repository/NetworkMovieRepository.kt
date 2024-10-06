@@ -1,7 +1,6 @@
 package com.cinetech.domain.repository
 
 import com.cinetech.domain.models.SearchMovieParam
-import com.cinetech.domain.models.LoadMoviesResponse
 import com.cinetech.domain.models.Response
 import com.cinetech.domain.models.SearchMoviePageable
 import com.cinetech.domain.models.SearchMoviesByNameParam

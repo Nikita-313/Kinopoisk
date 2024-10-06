@@ -3,6 +3,7 @@ package com.cinetech.ui.screen.main
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -18,12 +19,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +49,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
@@ -58,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
 import com.cinetech.domain.models.PreviewMovie
+import com.cinetech.domain.models.SearchHistory
 import com.cinetech.ui.R
 import com.cinetech.ui.theme.Green
 import com.cinetech.ui.theme.Grey
@@ -72,10 +78,25 @@ fun MainScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
+    val searchMovies = state.movies?.docs ?: emptyList()
+    val searchHistory = state.searchHistory
+
+    val scrollSate = rememberLazyListState()
+
     LaunchedEffect(Unit) {
         viewModel.effect.collect {
-
+            scrollSate.animateScrollToItem(0)
         }
+    }
+
+    LaunchedEffect(state.isSearchFilterVisible) {
+        if(state.isSearchFilterVisible)
+        scrollSate.animateScrollToItem(0)
+    }
+
+    LaunchedEffect(searchMovies.isEmpty()) {
+        if(searchMovies.isEmpty())
+            scrollSate.animateScrollToItem(0)
     }
 
     Scaffold(
@@ -85,6 +106,7 @@ fun MainScreen(
                 isLoading = state.searchInProgress,
                 onValueChange = { viewModel.onSearchTextChange(it) },
                 onClear = { viewModel.onSearchTextChange("") },
+                onSearch = { viewModel.saveTextHistory(it) },
                 onNavigate = {}
             )
         }
@@ -94,6 +116,7 @@ fun MainScreen(
                 .padding(paddingValues)
                 .imePadding()
                 .fillMaxSize(),
+            state = scrollSate,
         ) {
 
             item {
@@ -106,17 +129,55 @@ fun MainScreen(
                 }
             }
 
-            items(state.movies?.docs?.size ?: 0) {
-                FilmCard(state.movies!!.docs[it])
+            if (searchMovies.isEmpty()) {
+                items(
+                    count = searchHistory.size,
+                    key = {
+                        when (val element = searchHistory[it]) {
+                            is SearchHistory.Movie -> element.previewMovie.id
+                            is SearchHistory.Text -> element.text
+                        }
+                    },
+                ) {
+                    when (val element = searchHistory[it]) {
+                        is SearchHistory.Movie -> {
+                            FilmHistoryCard(
+                                modifier = Modifier.animateItem(),
+                                movie = element.previewMovie,
+                                onCardClick = viewModel::saveMovieHistory,
+                                onDeleteClick = viewModel::deleteMovieHistory
+                            )
+                        }
+
+                        is SearchHistory.Text -> {
+                            SearchTextHistoryCard(
+                                modifier = Modifier.animateItem(),
+                                text = element.text,
+                                onCardClick = viewModel::saveTextHistory,
+                                onDeleteClick = viewModel::deleteTextHistory
+                            )
+                        }
+                    }
+                }
             }
 
-            if (state.movies?.docs?.isNotEmpty() == true)
+            items(
+                count = searchMovies.size,
+                key = {searchMovies[it].id}
+            ) {
+                FilmCard(
+                    movie = searchMovies[it],
+                    onCardClick = viewModel::saveMovieHistory
+                )
+            }
+
+            if (searchMovies.isNotEmpty())
                 item {
                     Button(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(MaterialTheme.paddings.medium),
-                        onClick = {},
+                        onClick = { viewModel.saveTextHistory(state.searchText) },
                     ) {
                         Text(stringResource(R.string.main_screen_search_watch_results))
                     }
@@ -126,22 +187,115 @@ fun MainScreen(
     }
 }
 
+@Composable
+private fun SearchTextHistoryCard(
+    modifier: Modifier = Modifier,
+    text: String,
+    onCardClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(65.dp)
+            .clickable { onCardClick(text) }
+            .padding(vertical = MaterialTheme.paddings.small, horizontal = MaterialTheme.paddings.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
 
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.size(50.dp)) {
+            Icon(
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(40.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                    .padding(10.dp),
+                imageVector = Icons.Outlined.Search, contentDescription = "",
+                tint = MaterialTheme.colorScheme.surfaceContainerHighest
+            )
+        }
+        Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
+        Text(
+            modifier = Modifier.weight(1f),
+            text = text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.spacers.small))
+        IconButton(onClick = { (onDeleteClick(text)) }) {
+            Icon(imageVector = Icons.Outlined.Clear, contentDescription = "")
+        }
+    }
+}
 
+@Composable
+private fun FilmHistoryCard(
+    modifier: Modifier = Modifier,
+    movie: PreviewMovie,
+    onCardClick: (PreviewMovie) -> Unit,
+    onDeleteClick: (Long) -> Unit
+) {
+    val name = movie.name
+    val enName = if (movie.alternativeName == "") movie.year.toString() else "${movie.alternativeName}, " + movie.year
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onCardClick(movie) }
+            .padding(vertical = MaterialTheme.paddings.small, horizontal = MaterialTheme.paddings.medium),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+
+        AsyncImage(
+            modifier = Modifier
+                .width(50.dp)
+                .height(65.dp),
+            model = movie.previewUrl,
+            contentDescription = "",
+            placeholder = painterResource(R.drawable.ic_logo_foreground),
+            error = painterResource(R.drawable.ic_logo_foreground),
+        )
+
+        Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            Text(
+                text = name,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+            )
+            Text(
+                text = enName,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+            )
+        }
+        Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
+        IconButton(onClick = { onDeleteClick(movie.id) }) {
+            Icon(imageVector = Icons.Outlined.Clear, contentDescription = "")
+        }
+    }
+}
 
 @Composable
 private fun FilmCard(
     movie: PreviewMovie,
+    onCardClick: (PreviewMovie) -> Unit
 ) {
     val name = movie.name
     val enName = if (movie.alternativeName == "") movie.year.toString() else "${movie.alternativeName}, " + movie.year
     val kpRating = movie.kpRating.format(1)
-    val kpRatingColor = if(movie.kpRating < 7.0) Grey else Green
+    val kpRatingColor = if (movie.kpRating < 7.0) Grey else Green
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { }
+            .clickable { onCardClick(movie) }
             .padding(vertical = MaterialTheme.paddings.small, horizontal = MaterialTheme.paddings.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -192,14 +346,16 @@ private fun FilmCard(
 }
 
 @Composable
-private fun SearchFilter() {
+private fun SearchFilter(
+    modifier: Modifier = Modifier
+) {
 
     var select by remember { mutableStateOf(true) }
     val interactionSource = remember { MutableInteractionSource() }
 
     Surface(
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(65.dp)
             .padding(MaterialTheme.paddings.medium)
@@ -273,6 +429,7 @@ private fun AppBar(
     onValueChange: (String) -> Unit,
     onClear: () -> Unit,
     onNavigate: () -> Unit,
+    onSearch: (String) -> Unit,
 ) {
 
     TopAppBar(
@@ -309,7 +466,7 @@ private fun AppBar(
                     imeAction = ImeAction.Search
                 ),
                 keyboardActions = KeyboardActions(
-                    onSearch = {}
+                    onSearch = { onSearch(searchText) }
                 )
             )
         },
@@ -319,9 +476,10 @@ private fun AppBar(
             }
         },
         actions = {
-            IconButton(onClick = onClear) {
-                Icon(imageVector = Icons.Outlined.Clear, contentDescription = "")
-            }
+            if (searchText != "")
+                IconButton(onClick = onClear) {
+                    Icon(imageVector = Icons.Outlined.Clear, contentDescription = "", tint = MaterialTheme.colorScheme.onPrimary)
+                }
         }
     )
 }

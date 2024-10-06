@@ -21,6 +21,8 @@ private val DarkColorScheme = darkColorScheme(
     surface = DarkSurface,
     onSurface = DarkOnSurface,
     onSurfaceVariant = DarkOnSurfaceVariant,
+    surfaceContainerLowest = DarkSurfaceContainerLowest,
+    surfaceContainerHighest = DarkSurfaceContainerHighest
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -31,6 +33,8 @@ private val LightColorScheme = lightColorScheme(
     surface = LightSurface,
     onSurface = LightOnSurface,
     onSurfaceVariant = LightOnSurfaceVariant,
+    surfaceContainerLowest = LightSurfaceContainerLowest,
+    surfaceContainerHighest = LightSurfaceContainerHighest
 )
 
 private val LocalPaddings = staticCompositionLocalOf<Paddings> {

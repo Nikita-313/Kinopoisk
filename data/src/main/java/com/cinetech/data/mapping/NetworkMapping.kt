@@ -11,7 +11,6 @@ import com.cinetech.data.network.model.ApiSearchMovieResponse
 import com.cinetech.domain.models.Comment
 import com.cinetech.domain.models.CommentsResponse
 import com.cinetech.domain.models.LinkedMovie
-import com.cinetech.domain.models.LoadMoviesResponse
 import com.cinetech.domain.models.Movie
 import com.cinetech.domain.models.PossibleValue
 import com.cinetech.domain.models.PreviewMovie
