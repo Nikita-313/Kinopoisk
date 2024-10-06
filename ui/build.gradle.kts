@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+    
+    implementation(project(":domain"))
 
     implementation(libs.androidx.hilt.navigation.compose)
     implementation(libs.google.dagger.hilt)

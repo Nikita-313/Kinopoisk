@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,11 +53,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.cinetech.domain.models.SearchMovie
 import com.cinetech.ui.R
 import com.cinetech.ui.theme.Green
 import com.cinetech.ui.theme.Orange
 import com.cinetech.ui.theme.paddings
 import com.cinetech.ui.theme.spacers
+import com.cinetech.ui.utils.format
 
 @Composable
 fun MainScreen(
@@ -73,6 +77,7 @@ fun MainScreen(
         topBar = {
             AppBar(
                 searchText = state.searchText,
+                isLoading = state.searchInProgress,
                 onValueChange = { viewModel.onSearchTextChange(it) },
                 onClear = { viewModel.onSearchTextChange("") },
                 onNavigate = {}
@@ -93,29 +98,37 @@ fun MainScreen(
                 SearchFilter()
             }
 
-            (1..10).forEach {
-                FilmCard()
+            state.movies?.docs?.forEach {
+                FilmCard(it)
             }
 
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(MaterialTheme.paddings.medium),
-                onClick = {},
-            ) {
-                Text(stringResource(R.string.main_screen_search_watch_results))
-            }
+            if (state.movies?.docs?.isNotEmpty() == true)
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(MaterialTheme.paddings.medium),
+                    onClick = {},
+                ) {
+                    Text(stringResource(R.string.main_screen_search_watch_results))
+                }
 
         }
     }
 }
 
 @Composable
-private fun FilmCard() {
+private fun FilmCard(
+    movie: SearchMovie,
+) {
+    val name = movie.name
+    val enName = movie.enName?.let { if(it == "") "" else "$it, " } + movie.year
+    val kpRating = movie.kpRating?.format(1) ?: "0.0"
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable {  }
+            .clickable { }
             .padding(vertical = MaterialTheme.paddings.small, horizontal = MaterialTheme.paddings.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -132,13 +145,13 @@ private fun FilmCard() {
             modifier = Modifier.weight(1f),
         ) {
             Text(
-                text = "Апокалипсис",
+                text = name,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
             )
             Text(
-                text = "Apocalypto, 2006",
+                text = enName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -153,9 +166,9 @@ private fun FilmCard() {
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
             )
         }
-
+        Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
         Text(
-            text = "8.0",
+            text = kpRating,
             style = MaterialTheme.typography.titleMedium,
             color = Green
         )
@@ -240,6 +253,7 @@ private fun SearchFilter() {
 @Composable
 private fun AppBar(
     searchText: String,
+    isLoading: Boolean,
     onValueChange: (String) -> Unit,
     onClear: () -> Unit,
     onNavigate: () -> Unit,
@@ -256,6 +270,9 @@ private fun AppBar(
                 value = searchText,
                 onValueChange = onValueChange,
                 textStyle = MaterialTheme.typography.titleSmall,
+                suffix = if (isLoading) {{
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                }} else null,
                 placeholder = {
                     Text(
                         stringResource(R.string.main_screen_search_title),

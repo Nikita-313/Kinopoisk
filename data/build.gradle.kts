@@ -32,13 +32,15 @@ android {
 
 dependencies {
 
+    implementation(project(":domain"))
+
     implementation(group = "javax.inject", name = "javax.inject", version = "1")
 
-    implementation(libs.squareup.retrofit2)
-    implementation(libs.squareup.retrofit2.converter.gson)
+    api(libs.squareup.retrofit2)
+    api(libs.squareup.retrofit2.converter.gson)
 
-    implementation(libs.gson)
-    implementation(libs.android.room)
+    api(libs.gson)
+    api(libs.android.room)
     ksp(libs.android.room.compiler)
 
     implementation(libs.androidx.core.ktx)

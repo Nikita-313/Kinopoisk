@@ -19,8 +19,11 @@ gson = "2.11.0"
 retrofit = "2.11.0"
 navigation = "2.8.2"
 jetbrainsKotlinJvm = "2.0.20"
+kotlinCoroutines = "1.8.0"
 
 [libraries]
+
+kotlinxCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 android-room = { group = "androidx.room", name = "room-ktx", version.ref = "room" }

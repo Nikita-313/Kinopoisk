@@ -11,6 +11,19 @@ class MainUiReducer : Reducer<MainUiState, MainUiEvent, MainUiEffect> {
                     isSearchFilterVisible = event.newText != ""
                 ) to null
             }
+
+            is MainUiEvent.UpdateMovies -> {
+                previousState.copy(
+                    movies = event.movies
+                ) to null
+
+            }
+
+            is MainUiEvent.MoviesLoading -> {
+                previousState.copy(
+                    searchInProgress = event.isLoading
+                ) to null
+            }
         }
     }
 }
