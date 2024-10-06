@@ -28,3 +28,4 @@ internal val DarkOnSurfaceVariant = Color(0xFFC4C6D0)
 
 internal val Orange =  Color(0xFFfb5304)
 internal val Green =  Color(0xFF3da445)
+internal val Grey =  Color(0xFF9A9A9A)

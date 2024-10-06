@@ -1,6 +1,6 @@
 package com.cinetech.domain.models
 
-data class LoadMoviesParam(
+data class SearchMovieParam(
     val page: Int = 1,
     val limitNumber: Int = 10,
     val countries: List<String>? = null,

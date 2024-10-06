@@ -20,8 +20,10 @@ retrofit = "2.11.0"
 navigation = "2.8.2"
 jetbrainsKotlinJvm = "2.0.20"
 kotlinCoroutines = "1.8.0"
+coil = "2.7.0"
 
 [libraries]
+coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
 kotlinxCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }
 

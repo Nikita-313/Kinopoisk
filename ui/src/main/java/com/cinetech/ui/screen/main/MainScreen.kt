@@ -3,8 +3,6 @@ package com.cinetech.ui.screen.main
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -15,12 +13,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.Clear
@@ -50,12 +50,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.cinetech.domain.models.SearchMovie
+import coil.compose.AsyncImage
+import com.cinetech.domain.models.PreviewMovie
 import com.cinetech.ui.R
 import com.cinetech.ui.theme.Green
+import com.cinetech.ui.theme.Grey
 import com.cinetech.ui.theme.Orange
 import com.cinetech.ui.theme.paddings
 import com.cinetech.ui.theme.spacers
@@ -84,32 +89,38 @@ fun MainScreen(
             )
         }
     ) { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .fillMaxSize(),
         ) {
-            AnimatedVisibility(
-                state.isSearchFilterVisible,
-                enter = expandVertically(),
-                exit = shrinkVertically()
-            ) {
-                SearchFilter()
+
+            item {
+                AnimatedVisibility(
+                    state.isSearchFilterVisible,
+                    enter = expandVertically(),
+                    exit = shrinkVertically()
+                ) {
+                    SearchFilter()
+                }
             }
 
-            state.movies?.docs?.forEach {
-                FilmCard(it)
+            items(state.movies?.docs?.size ?: 0) {
+                FilmCard(state.movies!!.docs[it])
             }
+
 
             if (state.movies?.docs?.isNotEmpty() == true)
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(MaterialTheme.paddings.medium),
-                    onClick = {},
-                ) {
-                    Text(stringResource(R.string.main_screen_search_watch_results))
+                item {
+                    Button(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(MaterialTheme.paddings.medium),
+                        onClick = {},
+                    ) {
+                        Text(stringResource(R.string.main_screen_search_watch_results))
+                    }
                 }
 
         }
@@ -118,12 +129,12 @@ fun MainScreen(
 
 @Composable
 private fun FilmCard(
-    movie: SearchMovie,
+    movie: PreviewMovie,
 ) {
     val name = movie.name
-    val enName = movie.enName?.let { if(it == "") "" else "$it, " } + movie.year
-    val kpRating = movie.kpRating?.format(1) ?: "0.0"
-
+    val enName = if (movie.alternativeName == "") movie.year.toString() else "${movie.alternativeName}, " + movie.year
+    val kpRating = movie.kpRating.format(1)
+    val kpRatingColor = if(movie.kpRating < 7.0) Grey else Green
 
     Row(
         modifier = Modifier
@@ -132,14 +143,17 @@ private fun FilmCard(
             .padding(vertical = MaterialTheme.paddings.small, horizontal = MaterialTheme.paddings.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(
+
+        AsyncImage(
             modifier = Modifier
                 .width(50.dp)
-                .height(65.dp)
-                .background(color = Color.Black),
-            imageVector = Icons.Outlined.Clear,
-            contentDescription = ""
+                .height(65.dp),
+            model = movie.previewUrl,
+            contentDescription = "",
+            placeholder = painterResource(R.drawable.ic_logo_foreground),
+            error = painterResource(R.drawable.ic_logo_foreground),
         )
+
         Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
         Column(
             modifier = Modifier.weight(1f),
@@ -170,7 +184,7 @@ private fun FilmCard(
         Text(
             text = kpRating,
             style = MaterialTheme.typography.titleMedium,
-            color = Green
+            color = kpRatingColor
         )
     }
 }
@@ -270,9 +284,11 @@ private fun AppBar(
                 value = searchText,
                 onValueChange = onValueChange,
                 textStyle = MaterialTheme.typography.titleSmall,
-                suffix = if (isLoading) {{
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                }} else null,
+                suffix = if (isLoading) {
+                    {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    }
+                } else null,
                 placeholder = {
                     Text(
                         stringResource(R.string.main_screen_search_title),
@@ -284,6 +300,14 @@ private fun AppBar(
                     disabledBorderColor = Color.Transparent,
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
+                ),
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Search
+                ),
+                keyboardActions = KeyboardActions(
+                    onSearch = {}
                 )
             )
         },

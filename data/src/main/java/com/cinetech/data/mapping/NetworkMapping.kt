@@ -15,7 +15,6 @@ import com.cinetech.domain.models.LoadMoviesResponse
 import com.cinetech.domain.models.Movie
 import com.cinetech.domain.models.PossibleValue
 import com.cinetech.domain.models.PreviewMovie
-import com.cinetech.domain.models.SearchMovie
 import com.cinetech.domain.models.SearchMoviePageable
 
 fun ApiComment.toDomain(): Comment {
@@ -49,8 +48,8 @@ fun ApiLinkedMovie.toDomain(): LinkedMovie {
     )
 }
 
-fun ApiLoadMoviesResponse.toDomain(): LoadMoviesResponse {
-    return LoadMoviesResponse(
+fun ApiLoadMoviesResponse.toDomain(): SearchMoviePageable {
+    return SearchMoviePageable(
         docs = docs.map { it.toDomainPreviewMovie() },
         total = total,
         limit = limit,
@@ -61,14 +60,14 @@ fun ApiLoadMoviesResponse.toDomain(): LoadMoviesResponse {
 
 fun ApiMovieDto.toDomainPreviewMovie(): PreviewMovie {
     return PreviewMovie(
-        id = id,
-        name = name,
-        alternativeName = alternativeName,
-        year = year,
-        ageRating = ageRating,
+        id = id ?: 0,
+        name = name ?: "",
+        alternativeName = alternativeName ?: "",
+        year = year ?: 0,
+        ageRating = ageRating ?: 0,
         countries = countries?.map { it.name } ?: emptyList(),
-        preViewUrl = poster?.previewUrl,
-        kpRating = rating?.kp,
+        previewUrl = poster?.previewUrl ?: "",
+        kpRating = rating?.kp ?: 0.0,
     )
 }
 
@@ -95,16 +94,16 @@ fun ApiPossibleValueDto.toDomain(): PossibleValue {
     )
 }
 
-fun ApiSearchMovieDto.toDomain(): SearchMovie {
-    return SearchMovie(
+fun ApiSearchMovieDto.toDomain(): PreviewMovie {
+    return PreviewMovie(
         id = id,
         name = name,
-        enName = enName,
+        alternativeName = enName ?: "",
         year = year,
-        country = country,
+        countries = country?.let { listOf(it) } ?: emptyList(),
         ageRating = ageRating,
-        previewUrl = poster.previewUrl,
-        kpRating = rating?.kp
+        previewUrl = poster.previewUrl ?: "",
+        kpRating = rating?.kp ?: 0.0,
     )
 }
 

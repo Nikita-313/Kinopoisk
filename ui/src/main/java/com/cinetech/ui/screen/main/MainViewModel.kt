@@ -3,7 +3,7 @@ package com.cinetech.ui.screen.main
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.cinetech.domain.models.Response
-import com.cinetech.domain.models.SearchMoviesParam
+import com.cinetech.domain.models.SearchMoviesByNameParam
 import com.cinetech.domain.repository.NetworkMovieRepository
 import com.cinetech.ui.base.BaseViewModel
 import com.cinetech.ui.screen.main.model.MainUiEffect
@@ -13,7 +13,6 @@ import com.cinetech.ui.screen.main.model.MainUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -44,8 +43,8 @@ class MainViewModel @Inject constructor(
 
         searchMovieJob = viewModelScope.launch {
             delay(500)
-            val searchMovieParams = SearchMoviesParam(movieName = name)
-            networkMovieRepository.searchMovie(searchMovieParams).collect { response ->
+            val searchMovieParams = SearchMoviesByNameParam(movieName = name)
+            networkMovieRepository.searchMovieByName(searchMovieParams).collect { response ->
                 when (response) {
                     is Response.Error -> {
                         Log.e("MainViewModel searchMovie",response.throwable.toString())
