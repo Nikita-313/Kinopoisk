@@ -65,7 +65,6 @@ class MainViewModel @Inject constructor(
     }
 
     private fun searchMovie(name: String) {
-
         searchMovieJob?.cancel()
         sendEvent(MainUiEvent.MoviesLoading(false))
 

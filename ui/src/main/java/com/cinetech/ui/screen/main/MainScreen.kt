@@ -413,7 +413,7 @@ private fun SearchFilter(
                 ) {
                     Text(
                         text = stringResource(R.string.main_screen_search_filter_all_results),
-                        color = if (select) MaterialTheme.colorScheme.background else Color.Unspecified,
+                        color = if (select) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.titleSmall,
                     )
                 }
@@ -437,7 +437,7 @@ private fun SearchFilter(
                 ) {
                     Text(
                         text = stringResource(R.string.main_screen_search_filter_online_cinema),
-                        color = if (!select) MaterialTheme.colorScheme.background else Color.Unspecified,
+                        color = if (!select) MaterialTheme.colorScheme.background else MaterialTheme.colorScheme.onBackground,
                         style = MaterialTheme.typography.titleSmall,
                     )
                 }
