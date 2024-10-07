@@ -1,4 +1,4 @@
-package com.cinetech.domain.models
+package com.cinetech.domain.utils
 
 sealed class Response<T> {
     data object Loading : Response<Nothing>()

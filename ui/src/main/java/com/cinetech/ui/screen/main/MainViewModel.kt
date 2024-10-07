@@ -3,7 +3,7 @@ package com.cinetech.ui.screen.main
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.cinetech.domain.models.PreviewMovie
-import com.cinetech.domain.models.Response
+import com.cinetech.domain.utils.Response
 import com.cinetech.domain.models.SearchHistory
 import com.cinetech.domain.models.SearchMoviesByNameParam
 import com.cinetech.domain.repository.LocalSearchHistoryRepository

@@ -24,12 +24,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowLeft
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,6 +55,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -65,16 +67,17 @@ import coil.compose.AsyncImage
 import com.cinetech.domain.models.PreviewMovie
 import com.cinetech.domain.models.SearchHistory
 import com.cinetech.ui.R
+import com.cinetech.ui.composible.CustomOutlinedTextField
+import com.cinetech.ui.navigation.Screen
 import com.cinetech.ui.theme.Green
-import com.cinetech.ui.theme.Grey
-import com.cinetech.ui.theme.Orange
 import com.cinetech.ui.theme.paddings
 import com.cinetech.ui.theme.spacers
 import com.cinetech.ui.utils.format
 
 @Composable
 fun MainScreen(
-    viewModel: MainViewModel = hiltViewModel()
+    viewModel: MainViewModel = hiltViewModel(),
+    onNavigate: (Screen) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -90,12 +93,12 @@ fun MainScreen(
     }
 
     LaunchedEffect(state.isSearchFilterVisible) {
-        if(state.isSearchFilterVisible)
-        scrollSate.animateScrollToItem(0)
+        if (state.isSearchFilterVisible)
+            scrollSate.animateScrollToItem(0)
     }
 
     LaunchedEffect(searchMovies.isEmpty()) {
-        if(searchMovies.isEmpty())
+        if (searchMovies.isEmpty())
             scrollSate.animateScrollToItem(0)
     }
 
@@ -103,10 +106,12 @@ fun MainScreen(
         topBar = {
             AppBar(
                 searchText = state.searchText,
-                isLoading = state.searchInProgress,
                 onValueChange = { viewModel.onSearchTextChange(it) },
                 onClear = { viewModel.onSearchTextChange("") },
-                onSearch = { viewModel.saveTextHistory(it) },
+                onSearch = {
+                    onNavigate(Screen.Search(it))
+                    viewModel.saveTextHistory(it)
+                },
                 onNavigate = {}
             )
         }
@@ -153,7 +158,10 @@ fun MainScreen(
                             SearchTextHistoryCard(
                                 modifier = Modifier.animateItem(),
                                 text = element.text,
-                                onCardClick = viewModel::saveTextHistory,
+                                onCardClick = { searchText ->
+                                    onNavigate(Screen.Search(searchText))
+                                    viewModel.saveTextHistory(searchText)
+                                },
                                 onDeleteClick = viewModel::deleteTextHistory
                             )
                         }
@@ -163,7 +171,7 @@ fun MainScreen(
 
             items(
                 count = searchMovies.size,
-                key = {searchMovies[it].id}
+                key = { searchMovies[it].id }
             ) {
                 FilmCard(
                     movie = searchMovies[it],
@@ -177,9 +185,19 @@ fun MainScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(MaterialTheme.paddings.medium),
-                        onClick = { viewModel.saveTextHistory(state.searchText) },
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = MaterialTheme.colorScheme.onBackground,
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer
+                        ),
+                        onClick = {
+                            onNavigate(Screen.Search(state.searchText))
+                            viewModel.saveTextHistory(state.searchText)
+                        },
                     ) {
-                        Text(stringResource(R.string.main_screen_search_watch_results))
+                        Text(
+                            text = stringResource(R.string.main_screen_search_watch_results),
+                            style = TextStyle(fontWeight = FontWeight.Bold)
+                        )
                     }
                 }
 
@@ -208,10 +226,10 @@ private fun SearchTextHistoryCard(
                 modifier = Modifier
                     .clip(CircleShape)
                     .size(40.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
                     .padding(10.dp),
                 imageVector = Icons.Outlined.Search, contentDescription = "",
-                tint = MaterialTheme.colorScheme.surfaceContainerHighest
+                tint = MaterialTheme.colorScheme.onSecondary
             )
         }
         Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
@@ -224,7 +242,11 @@ private fun SearchTextHistoryCard(
         )
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.small))
         IconButton(onClick = { (onDeleteClick(text)) }) {
-            Icon(imageVector = Icons.Outlined.Clear, contentDescription = "")
+            Icon(
+                imageVector = Icons.Outlined.Clear,
+                contentDescription = "",
+                tint = MaterialTheme.colorScheme.onSecondary
+            )
         }
     }
 }
@@ -271,13 +293,17 @@ private fun FilmHistoryCard(
                 text = enName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSecondary,
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
             )
         }
         Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
         IconButton(onClick = { onDeleteClick(movie.id) }) {
-            Icon(imageVector = Icons.Outlined.Clear, contentDescription = "")
+            Icon(
+                imageVector = Icons.Outlined.Clear,
+                contentDescription = "",
+                tint = MaterialTheme.colorScheme.onSecondary
+            )
         }
     }
 }
@@ -290,7 +316,7 @@ private fun FilmCard(
     val name = movie.name
     val enName = if (movie.alternativeName == "") movie.year.toString() else "${movie.alternativeName}, " + movie.year
     val kpRating = movie.kpRating.format(1)
-    val kpRatingColor = if (movie.kpRating < 7.0) Grey else Green
+    val kpRatingColor = if (movie.kpRating < 7.0 && movie.kpRating >= 5) MaterialTheme.colorScheme.onSecondary else if (movie.kpRating < 5.0) MaterialTheme.colorScheme.error else Green
 
     Row(
         modifier = Modifier
@@ -324,22 +350,22 @@ private fun FilmCard(
                 text = enName,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium,
             )
             Spacer(modifier = Modifier.height(MaterialTheme.spacers.small))
             Text(
                 text = stringResource(R.string.main_screen_search_film_card_watch),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = Orange,
+                color = MaterialTheme.colorScheme.primary,
                 style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold),
             )
         }
         Spacer(modifier = Modifier.width(MaterialTheme.spacers.medium))
         Text(
             text = kpRating,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
             color = kpRatingColor
         )
     }
@@ -354,7 +380,7 @@ private fun SearchFilter(
     val interactionSource = remember { MutableInteractionSource() }
 
     Surface(
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.secondaryContainer,
         modifier = modifier
             .fillMaxWidth()
             .height(65.dp)
@@ -425,7 +451,6 @@ private fun SearchFilter(
 @Composable
 private fun AppBar(
     searchText: String,
-    isLoading: Boolean,
     onValueChange: (String) -> Unit,
     onClear: () -> Unit,
     onNavigate: () -> Unit,
@@ -438,20 +463,16 @@ private fun AppBar(
             spotColor = Color.DarkGray,
         ),
         title = {
-            OutlinedTextField(
+            CustomOutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = searchText,
                 onValueChange = onValueChange,
                 textStyle = MaterialTheme.typography.titleSmall,
-                suffix = if (isLoading) {
-                    {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp))
-                    }
-                } else null,
                 placeholder = {
                     Text(
                         stringResource(R.string.main_screen_search_title),
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondary
                     )
                 },
                 colors = OutlinedTextFieldDefaults.colors(
@@ -459,6 +480,12 @@ private fun AppBar(
                     disabledBorderColor = Color.Transparent,
                     focusedBorderColor = Color.Transparent,
                     unfocusedBorderColor = Color.Transparent,
+                    cursorColor = MaterialTheme.colorScheme.onBackground,
+                    selectionColors = TextSelectionColors(
+                        backgroundColor = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.1f),
+                        handleColor = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.1f)
+                    )
+
                 ),
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
@@ -478,7 +505,7 @@ private fun AppBar(
         actions = {
             if (searchText != "")
                 IconButton(onClick = onClear) {
-                    Icon(imageVector = Icons.Outlined.Clear, contentDescription = "", tint = MaterialTheme.colorScheme.onPrimary)
+                    Icon(imageVector = Icons.Outlined.Clear, contentDescription = "")
                 }
         }
     )

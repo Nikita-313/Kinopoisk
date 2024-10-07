@@ -2,6 +2,7 @@ package com.cinetech.kinopoisk.di
 
 import android.content.Context
 import androidx.room.Room
+import com.cinetech.data.datasource.MoviePagingSourceFactory
 import com.cinetech.data.local.AppDatabase
 import com.cinetech.data.network.MovieService
 import com.cinetech.data.repository.LocalSearchHistoryRepositoryImpl
@@ -40,7 +41,8 @@ class DataModule {
             val originalRequest: Request = chain.request()
             val builder: Request.Builder = originalRequest.newBuilder().header(
                 "X-API-KEY",
-                "ZH15SC8-D3A47AT-MR04KXQ-VDBEKMX"
+                "FX7WGBF-KKM4XZR-J2PCP7Q-FM1PX06"
+                //"ZH15SC8-D3A47AT-MR04KXQ-VDBEKMX"
             )
             val newRequest: Request = builder.build()
             chain.proceed(newRequest)
@@ -60,7 +62,8 @@ class DataModule {
 
     @Provides
     @Singleton
-    fun provideNetworkMovieRepository(movieService: MovieService): NetworkMovieRepository = NetworkMovieRepositoryImp(movieService = movieService)
+    fun provideNetworkMovieRepository(movieService: MovieService,moviePagingSourceFactory: MoviePagingSourceFactory): NetworkMovieRepository =
+        NetworkMovieRepositoryImp(movieService = movieService, moviePagingSourceFactory = moviePagingSourceFactory)
 
 
     @Provides

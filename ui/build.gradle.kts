@@ -43,6 +43,8 @@ dependencies {
     
     implementation(project(":domain"))
 
+    implementation(libs.paging.compose)
+
     implementation(libs.coil)
 
     implementation(libs.androidx.hilt.navigation.compose)

@@ -4,4 +4,10 @@
     <string name="main_screen_search_filter_all_results">Все результаты</string>
     <string name="main_screen_search_filter_online_cinema">Онлайн-кинотеатр</string>
     <string name="main_screen_search_title">Фильмы, сериалы, персоны</string>
+
+    <string name="search_screen_found_films">Найденные фильмы</string>
+    <string name="search_screen_connection_error">Отсутствует соединение с сервером</string>
+    <string name="search_screen_check_internet">Проверьте ваше соединение и попробуйте ещё раз</string>
+    <string name="search_screen_refresh">Обновить</string>
+    <string name="search_screen_title">Поиск</string>
 </resources>

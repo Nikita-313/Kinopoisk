@@ -21,8 +21,14 @@ navigation = "2.8.2"
 jetbrainsKotlinJvm = "2.0.20"
 kotlinCoroutines = "1.8.0"
 coil = "2.7.0"
+paging = "3.3.2"
 
 [libraries]
+
+paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
+paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+paging-common = { module = "androidx.paging:paging-common", version.ref = "paging" }
+
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 
 kotlinxCoroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinCoroutines" }

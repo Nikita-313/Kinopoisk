@@ -10,5 +10,6 @@ java {
 
 
 dependencies{
+    implementation(libs.paging.common)
     implementation(libs.kotlinxCoroutines)
 }

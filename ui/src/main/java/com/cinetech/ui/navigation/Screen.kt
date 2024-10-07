@@ -8,5 +8,8 @@ sealed interface Screen {
     data object Main : Screen
 
     @Serializable
-    data class Film(val id:Long) : Screen
+    data class Search(val searchText: String) : Screen
+
+    @Serializable
+    data class Film(val id: Long) : Screen
 }

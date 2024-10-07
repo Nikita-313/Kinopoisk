@@ -32,6 +32,8 @@ android {
 
 dependencies {
 
+    implementation(libs.paging.runtime)
+
     implementation(project(":domain"))
 
     implementation(group = "javax.inject", name = "javax.inject", version = "1")
