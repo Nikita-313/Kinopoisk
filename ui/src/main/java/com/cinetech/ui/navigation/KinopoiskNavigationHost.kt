@@ -5,7 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.cinetech.ui.screen.FilmScreen
+import com.cinetech.ui.screen.film.FilmScreen
 import com.cinetech.ui.screen.main.MainScreen
 import com.cinetech.ui.screen.search.SearchScreen
 
@@ -15,7 +15,7 @@ fun KinopoiskNavigationHost(
 ) {
     NavHost(
         navController = navHostController,
-        startDestination = Screen.Main
+        startDestination = Screen.Film(1L)
     ) {
         composable<Screen.Main> {
             MainScreen(
