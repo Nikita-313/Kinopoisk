@@ -6,9 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.rememberScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,48 +29,45 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import com.cinetech.ui.screen.search.SearchScreenNestedScrollConnection
+import com.cinetech.ui.screen.search.customScroll
 import com.cinetech.ui.theme.paddings
+import com.cinetech.ui.utils.px
 import com.cinetech.ui.utils.toPx
 
 
 @Composable
 fun FilmScreen() {
 
-    val sizeState = remember { mutableStateOf(900f) }
+    val topOffset = 250.dp.toPx
+    val sizeState = remember { mutableFloatStateOf(topOffset) }
 
     Scaffold(
-        topBar = {
-
-            AppBar(sizeState.value == 0f) {}
-        }
+        topBar = { AppBar(sizeState.value == 0f) {} }
     ) { paddingValues ->
-        val lazyScrollState = rememberLazyListState()
 
+        val lazyScrollState = rememberLazyListState()
         val minOffset = 0f
         val maxOffset = LocalConfiguration.current.screenHeightDp.dp.toPx
 
-        val scope = rememberCoroutineScope()
 
-        val connection = remember {
-
-            SearchScreenNestedScrollConnection(
-                sizeState = sizeState,
-                maxOffset = maxOffset,
-                minOffset = minOffset,
-                lazyScrollState = lazyScrollState,
-                scope = scope,
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Green),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            Image(
+                imageVector = Icons.Default.AccountCircle,
+                contentDescription = ""
             )
         }
 
@@ -82,39 +76,23 @@ fun FilmScreen() {
             modifier = Modifier
                 .padding(paddingValues)
                 .fillMaxSize()
-                .background(color = Color.Red)
-                .nestedScroll(connection)
-                .scrollable(
-                    orientation = Orientation.Vertical,
-                    state = rememberScrollableState { delta ->
-
-                        val lazyOffset = -lazyScrollState.dispatchRawDelta(-delta)
-
-                        if (delta < 0 && sizeState.value == minOffset) {
-                            return@rememberScrollableState lazyOffset
-                        }
-
-                        if (delta > 0 && sizeState.value == maxOffset) {
-                            return@rememberScrollableState 0f
-                        }
-
-                        delta
-                    }
+                .customScroll(
+                    offsetY = sizeState,
+                    minOffset = minOffset,
+                    maxOffset = maxOffset,
+                    lazyScrollState = lazyScrollState,
+                    peekHeight = 120.dp.toPx
                 ),
             contentAlignment = Alignment.Center,
         ) {
-
-            Image(
-                modifier = Modifier.size(300.dp),
-                imageVector = Icons.Default.AccountCircle,
-                contentDescription = ""
-            )
 
             LazyColumn(
                 state = lazyScrollState,
                 userScrollEnabled = false,
                 modifier = Modifier
-                    .offset { IntOffset(0, sizeState.value.toInt()) }
+                    .offset {
+                        IntOffset(0, sizeState.value.toInt())
+                    }
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
             ) {
