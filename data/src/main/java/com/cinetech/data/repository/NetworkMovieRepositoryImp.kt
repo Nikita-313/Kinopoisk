@@ -6,6 +6,7 @@ import androidx.paging.PagingData
 import com.cinetech.data.datasource.MoviePagingSourceFactory
 import com.cinetech.data.mapping.toDomain
 import com.cinetech.data.network.MovieService
+import com.cinetech.domain.models.Movie
 import com.cinetech.domain.models.PreviewMovie
 import com.cinetech.domain.models.SearchMovieParam
 import com.cinetech.domain.utils.Response
@@ -74,6 +75,22 @@ class NetworkMovieRepositoryImp @Inject constructor(
             config = PagingConfig(pageSize = pageSize),
             pagingSourceFactory = { moviePagingSourceFactory.create(query) }
         ).flow
+    }
+
+    override fun getMovieById(id:Long): Flow<Response<out Movie>>{
+        return flow {
+            emit(Response.Loading)
+            val response = movieService.loadMovieById(id).toDomain()
+            emit(Response.Success(response))
+        }.catch { e ->
+            val errorMessage = e.message
+            emit(
+                Response.Error(
+                    message = errorMessage,
+                    throwable = e
+                )
+            )
+        }.flowOn(Dispatchers.IO)
     }
 
 }

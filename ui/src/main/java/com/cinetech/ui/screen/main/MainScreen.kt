@@ -148,7 +148,10 @@ fun MainScreen(
                             FilmHistoryCard(
                                 modifier = Modifier.animateItem(),
                                 movie = element.previewMovie,
-                                onCardClick = viewModel::saveMovieHistory,
+                                onCardClick = { film ->
+                                    viewModel.saveMovieHistory(film)
+                                    onNavigate(Screen.Film(film.id))
+                                },
                                 onDeleteClick = viewModel::deleteMovieHistory
                             )
                         }
@@ -174,7 +177,10 @@ fun MainScreen(
             ) {
                 FilmCard(
                     movie = searchMovies[it],
-                    onCardClick = viewModel::saveMovieHistory
+                    onCardClick = { movie ->
+                        viewModel.saveMovieHistory(movie)
+                        onNavigate(Screen.Film(movie.id))
+                    }
                 )
             }
 

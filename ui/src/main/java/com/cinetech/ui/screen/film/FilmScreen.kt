@@ -1,17 +1,19 @@
 package com.cinetech.ui.screen.film
 
+import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,32 +40,47 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.cinetech.domain.models.Movie
 import com.cinetech.ui.R
+import com.cinetech.ui.composible.shimmer
+import com.cinetech.ui.theme.Green
 import com.cinetech.ui.theme.paddings
 import com.cinetech.ui.theme.spacers
+import com.cinetech.ui.utils.format
 import com.cinetech.ui.utils.px
 import com.cinetech.ui.utils.toPx
 
 
 @Composable
-fun FilmScreen() {
+fun FilmScreen(
+    viewModel: FilmViewModel = hiltViewModel()
+) {
+
+    val state = viewModel.state.collectAsState()
 
     val topOffset = 250.dp.toPx
     val topOffsetState = remember { mutableFloatStateOf(topOffset) }
@@ -79,39 +96,53 @@ fun FilmScreen() {
         val maxOffset = LocalConfiguration.current.screenHeightDp.dp.toPx
 
         BackgroundImage(
+            image = state.value.poster,
             topOffsetState = topOffsetState
         )
 
-        MainContent(
-            modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
-                .customNestedScroll(
-                    offsetY = topOffsetState,
-                    minOffset = minOffset,
-                    maxOffset = maxOffset,
-                    lazyScrollState = lazyScrollState,
-                    peekHeight = 120.dp.toPx,
-                ),
-            topOffsetState = topOffsetState,
-            lazyScrollState = lazyScrollState
-        )
+        if (!state.value.isLoading)
+            MainContent(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .fillMaxSize()
+                    .customNestedScroll(
+                        enable = !state.value.isLoading,
+                        offsetY = topOffsetState,
+                        minOffset = minOffset,
+                        maxOffset = maxOffset,
+                        lazyScrollState = lazyScrollState,
+                        peekHeight = 120.dp.toPx,
+                    ),
+                topOffsetState = topOffsetState,
+                lazyScrollState = lazyScrollState,
+                movie = state.value.movie
+            )
+
+        if (state.value.isLoading)
+            LoadingShimmer(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .offset {
+                        IntOffset(0, topOffset.toInt())
+                    }
+            )
 
     }
 }
 
 @Composable
 private fun BackgroundImage(
+    image: Drawable?,
     topOffsetState: State<Float>
 ) {
 
-    val minPaddings =  30.dp.toPx
-    val maxPaddings =  70.dp.toPx
-    val topImgOffset = 50.dp.toPx
+    val minPaddings = 30.dp.toPx
+    val maxPaddings = 70.dp.toPx
+    val topImgOffset = 80.dp.toPx
 
     val imgTopOffset = remember {
         derivedStateOf {
-            topOffsetState.value / 5  + topImgOffset
+            topOffsetState.value / 5 + topImgOffset
         }
     }
 
@@ -122,35 +153,51 @@ private fun BackgroundImage(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.secondary),
         contentAlignment = Alignment.TopCenter
     ) {
-
-        Image(
-            painterResource(R.drawable.img),
-            modifier = Modifier
-                .fillMaxSize()
-                .blur(radius = 25.dp),
-            contentDescription = "",
-            contentScale = ContentScale.Crop
-        )
+        if (image != null)
+            Image(
+                bitmap = image.toBitmap().asImageBitmap(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .blur(radius = 30.dp),
+                contentDescription = "",
+                contentScale = ContentScale.Crop
+            )
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background.copy(alpha = 0.6f))
         ) {
-            Image(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = imgPaddings.value.px)
-                    .height(400.dp)
-                    .offset {
-                        IntOffset(0,imgTopOffset.value.toInt())
-                    },
-                painter = painterResource(R.drawable.img),
-                contentDescription = "",
-            )
+
+            if (image != null)
+                Image(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = imgPaddings.value.px)
+                        .offset {
+                            IntOffset(0, imgTopOffset.value.toInt())
+                        },
+                    contentScale = ContentScale.FillWidth,
+                    bitmap = image.toBitmap().asImageBitmap(),
+                    contentDescription = "",
+                )
+
+            if (image == null)
+                Spacer(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = imgPaddings.value.px)
+                        .fillMaxHeight()
+                        .offset {
+                            IntOffset(0, imgTopOffset.value.toInt())
+                        }
+                        .background(MaterialTheme.colorScheme.secondaryContainer),
+                )
         }
     }
 }
@@ -159,57 +206,61 @@ private fun BackgroundImage(
 @Composable
 private fun MainContent(
     modifier: Modifier = Modifier,
+    movie: Movie?,
     topOffsetState: State<Float>,
     lazyScrollState: LazyListState,
 ) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center,
-    ) {
+    if (movie != null)
 
-        LazyColumn(
-            state = lazyScrollState,
-            userScrollEnabled = false,
-            contentPadding = PaddingValues(horizontal = MaterialTheme.paddings.medium),
-            modifier = Modifier
-                .offset {
-                    IntOffset(0, topOffsetState.value.toInt())
-                }
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center,
         ) {
-            item { DragIcon() }
-            item { Header() }
-            item { Description() }
-            item { ThrillersAndTeasers() }
-            item { Rating() }
-            item { Actors() }
-        }
 
-    }
+            LazyColumn(
+                state = lazyScrollState,
+                userScrollEnabled = false,
+                modifier = Modifier
+                    .offset {
+                        IntOffset(0, topOffsetState.value.toInt())
+                    }
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
+            ) {
+                item { DragIcon() }
+                item {
+                    Header(
+                        title = movie.name,
+                        kpRating = movie.kpRating,
+                        watchNumber = movie.kpVotesNumber,
+                        enTitle = movie.enName,
+                        releaseYear = movie.year,
+                        filmCountry = movie.countries.firstOrNull() ?: "",
+                        filmDurationMin = 90,
+                        ageRating = movie.ageRating,
+                    )
+                }
+                item { Description(description = movie.description) }
+                item { ThrillersAndTeasers() }
+                item { Rating() }
+                item { Actors() }
+            }
+
+        }
 }
 
 @Composable
 private fun Actors() {
     Column {
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.large))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Актеры",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-            )
-            Text(
-                text = "Все",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-            )
-        }
+        SectionTitle(
+            title = stringResource(R.string.film_screen_actors),
+            onClickAllButton = {}
+        )
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.large))
-        Column {
+        Column(
+            modifier = Modifier.padding(start = MaterialTheme.paddings.medium)
+        ) {
             ActorCard()
             Spacer(modifier = Modifier.height(MaterialTheme.spacers.medium))
             ActorCard()
@@ -249,15 +300,13 @@ private fun ActorCard() {
 private fun Rating() {
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.large))
-        Text(
-            text = "Рейтинг кинопоиска",
-            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-        )
+        SectionTitle(stringResource(R.string.film_screen_kp_rate))
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.medium))
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .padding(horizontal = MaterialTheme.paddings.medium)
                 .background(MaterialTheme.colorScheme.secondaryContainer)
                 .padding(vertical = MaterialTheme.paddings.large),
             verticalArrangement = Arrangement.Center,
@@ -285,7 +334,9 @@ private fun Rating() {
             }
         }
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.medium))
-        Row {
+        Row(
+            modifier = Modifier.padding(start = MaterialTheme.paddings.medium)
+        ) {
             RatingCard()
         }
 
@@ -318,28 +369,18 @@ private fun RatingCard() {
     }
 }
 
-
 @Composable
 private fun ThrillersAndTeasers() {
     Column {
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.large))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Трейлеры и тизеры",
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-            )
-            Text(
-                text = "Все",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-            )
-        }
+        SectionTitle(
+            title = stringResource(R.string.film_screen_trailers_adn_tisers),
+            onClickAllButton = {}
+        )
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.medium))
-        Row {
+        Row(
+            modifier = Modifier.padding(start = MaterialTheme.paddings.medium)
+        ) {
             ThrillerCard()
         }
     }
@@ -368,28 +409,75 @@ private fun ThrillerCard() {
 }
 
 @Composable
-private fun Description() {
-    Spacer(modifier = Modifier.height(MaterialTheme.spacers.medium))
-    Text(
-        text = "Много лет назад самым страшным кошмаром людей были появившиеся неизвестнго откуда титаны; гигантские",
-        maxLines = 3
-    )
-    Spacer(modifier = Modifier.height(MaterialTheme.spacers.small))
-    Text(
-        text = "Все детали о фильме",
-        color = MaterialTheme.colorScheme.primary,
-        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
-    )
+private fun SectionTitle(
+    title: String,
+    onClickAllButton: (() -> Unit?)? = null,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MaterialTheme.paddings.medium),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        if (onClickAllButton != null)
+            Text(
+                text = "Все",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
+            )
+    }
 }
 
 @Composable
-private fun Header() {
+private fun Description(description: String) {
     Column(
+        modifier = Modifier.padding(horizontal = MaterialTheme.paddings.medium),
+    ) {
+        Spacer(modifier = Modifier.height(MaterialTheme.spacers.medium))
+        Text(
+            text = description,
+            maxLines = 3
+        )
+        Spacer(modifier = Modifier.height(MaterialTheme.spacers.small))
+        Text(
+            text = stringResource(R.string.film_screen_all_details),
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
+        )
+    }
+}
+
+@Composable
+private fun Header(
+    title: String,
+    kpRating: Double,
+    watchNumber: Int,
+    enTitle: String,
+    releaseYear: Int,
+    filmCountry: String,
+    filmDurationMin: Int,
+    ageRating: Int,
+) {
+
+    val kpRatingStr = kpRating.format(1)
+    val kpRatingColor = if (kpRating < 7.0 && kpRating >= 5) MaterialTheme.colorScheme.onSecondary else if (kpRating < 5.0) MaterialTheme.colorScheme.error else Green
+    val watchNumberStr = watchNumber.toString() // ToDo K-format (20412  -> 20K)
+
+    val filmDurationMinStr = filmDurationMin.toString() // ToDo time-format (90  -> 1 час 30 мин)
+
+    Column(
+        modifier = Modifier.padding(horizontal = MaterialTheme.paddings.medium),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(modifier = Modifier.height(MaterialTheme.spacers.small))
+
         Text(
-            text = "Атка титанов. Фильмы первый: Жестокий мир",
+            text = title,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.ExtraBold)
         )
@@ -400,28 +488,28 @@ private fun Header() {
 
         Row {
             Text(
-                text = "4.5",
-                color = MaterialTheme.colorScheme.error,
+                text = kpRatingStr,
+                color = kpRatingColor,
                 textAlign = TextAlign.Center,
                 style = infoTextStyle
             )
             Spacer(modifier = Modifier.width(2.dp))
             Text(
-                text = "20К",
+                text = watchNumberStr,
                 color = MaterialTheme.colorScheme.secondary,
                 textAlign = TextAlign.Center,
                 style = infoTextStyle
             )
             Spacer(modifier = Modifier.width(2.dp))
             Text(
-                text = "Shigeki no kyojin",
+                text = enTitle,
                 textAlign = TextAlign.Center,
                 style = infoTextStyle
             )
         }
         Text(
             modifier = Modifier.width(180.dp),
-            text = "2015,фантастика, драма, Япония, 1ч 38мин, 18+",
+            text = "$releaseYear, $filmCountry, $filmDurationMinStr, $ageRating+",
             color = MaterialTheme.colorScheme.secondary,
             textAlign = TextAlign.Center,
             style = infoTextStyle
@@ -441,7 +529,9 @@ private fun Header() {
                     tint = MaterialTheme.colorScheme.secondary,
                 )
                 Text(
-                    text = "Оценить",
+                    text = stringResource(R.string.film_screen_estimate),
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible,
                     color = MaterialTheme.colorScheme.secondary,
                     style = infoTextStyle
                 )
@@ -455,7 +545,9 @@ private fun Header() {
                     tint = MaterialTheme.colorScheme.secondary,
                 )
                 Text(
-                    text = "Буду смотреть",
+                    text = stringResource(R.string.film_screen_will_be_watching),
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible,
                     color = MaterialTheme.colorScheme.secondary,
                     style = infoTextStyle
                 )
@@ -469,7 +561,9 @@ private fun Header() {
                     tint = MaterialTheme.colorScheme.secondary,
                 )
                 Text(
-                    text = "Поделиться",
+                    text = stringResource(R.string.film_screen_share),
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible,
                     color = MaterialTheme.colorScheme.secondary,
                     style = infoTextStyle
                 )
@@ -483,7 +577,9 @@ private fun Header() {
                     tint = MaterialTheme.colorScheme.secondary,
                 )
                 Text(
-                    text = "Ещё",
+                    text = stringResource(R.string.film_screen_more),
+                    maxLines = 1,
+                    overflow = TextOverflow.Visible,
                     color = MaterialTheme.colorScheme.secondary,
                     style = infoTextStyle
                 )
@@ -491,7 +587,6 @@ private fun Header() {
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -550,4 +645,75 @@ private fun DragIcon() {
                 .background(MaterialTheme.colorScheme.secondaryContainer)
         )
     }
+}
+
+@Composable
+private fun LoadingShimmer(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.background)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = MaterialTheme.paddings.large),
+        ) {
+            DragIcon()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Skeleton(Modifier.width(200.dp))
+                Skeleton(Modifier.width(150.dp))
+                Skeleton(Modifier.width(240.dp))
+            }
+            Spacer(Modifier.height(MaterialTheme.spacers.large))
+            Skeleton(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(end = 30.dp)
+            )
+            Skeleton(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(end = 60.dp)
+            )
+            Skeleton(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(end = 10.dp)
+            )
+            Skeleton(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(end = 30.dp)
+            )
+            Skeleton(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(end = 60.dp)
+            )
+            Skeleton(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(end = 100.dp)
+            )
+        }
+        Spacer(
+            Modifier
+                .fillMaxSize()
+                .shimmer()
+        )
+    }
+}
+
+@Composable
+private fun Skeleton(modifier: Modifier) {
+    Spacer(
+        modifier = modifier
+            .padding(bottom = MaterialTheme.paddings.small)
+            .height(14.dp)
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+    )
 }

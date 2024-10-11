@@ -10,4 +10,13 @@
     <string name="search_screen_check_internet">Проверьте ваше соединение и попробуйте ещё раз</string>
     <string name="search_screen_refresh">Обновить</string>
     <string name="search_screen_title">Поиск</string>
+
+    <string name="film_screen_estimate">Оценить</string>
+    <string name="film_screen_will_be_watching">Буду смотреть</string>
+    <string name="film_screen_share">Поделиться</string>
+    <string name="film_screen_more">Ещё</string>
+    <string name="film_screen_all_details">Все детали о фильме</string>
+    <string name="film_screen_trailers_adn_tisers">Трейлеры и тизеры</string>
+    <string name="film_screen_kp_rate">Рейтинг кинопоиска</string>
+    <string name="film_screen_actors">Актеры</string>
 </resources>

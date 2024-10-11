@@ -1,7 +1,7 @@
 package com.cinetech.data.network.model
 
 data class ApiMovieDto(
-    val id: Long?,
+    val id: Long,
     val name: String?,
     val alternativeName: String?,
     val year: Int?,
@@ -12,5 +12,7 @@ data class ApiMovieDto(
     val shortDescription: String?,
     val description: String?,
     val similarMovies: List<ApiLinkedMovie>?,
-    val votes: ApiVotes,
+    val votes: ApiVotes?,
+    val enName: String?,
+    val movieLength:Int?,
 )

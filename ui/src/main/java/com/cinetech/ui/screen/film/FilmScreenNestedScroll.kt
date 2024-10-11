@@ -30,7 +30,8 @@ fun Modifier.customNestedScroll(
     minOffset: Float,
     maxOffset: Float,
     peekHeight: Float,
-    lazyScrollState: LazyListState
+    lazyScrollState: LazyListState,
+    enable:Boolean = true,
 ): Modifier {
 
     val initOffset = remember { offsetY.value }
@@ -69,6 +70,7 @@ fun Modifier.customNestedScroll(
     return this then Modifier
         .nestedScroll(connection)
         .scrollable(
+            enabled = enable,
             orientation = Orientation.Vertical,
             state = scrollState
         )

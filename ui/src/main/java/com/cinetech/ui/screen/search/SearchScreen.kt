@@ -130,7 +130,9 @@ fun SearchScreen(
                 if (movie != null) {
                     MovieCard(
                         movie = movie,
-                        onCardClick = {}
+                        onCardClick = {
+                            onNavigate(Screen.Film(it.id))
+                        }
                     )
                 }
             }

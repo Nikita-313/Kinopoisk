@@ -73,16 +73,18 @@ fun ApiMovieDto.toDomainPreviewMovie(): PreviewMovie {
 fun ApiMovieDto.toDomain(): Movie {
     return Movie(
         id = id,
-        name = name,
-        year = year,
-        ageRating = ageRating,
-        countries = countries?.map { it.name },
+        name = name ?: "",
+        year = year ?: 0,
+        ageRating = ageRating ?: 0,
+        countries = countries?.map { it.name } ?: emptyList(),
         posterUrl = poster?.url,
-        kpRating = rating?.kp,
-        shortDescription = shortDescription,
-        description = description,
-        similarMovies = similarMovies?.map { it.toDomain() },
-        kpVotesNumber = votes.kp?.toIntOrNull()
+        kpRating = rating?.kp ?: 0.0,
+        shortDescription = shortDescription ?: "",
+        description = description ?: "",
+        similarMovies = similarMovies?.map { it.toDomain() } ?: emptyList(),
+        kpVotesNumber = votes?.kp?.toIntOrNull() ?: 0 ,
+        enName = enName?: "",
+        movieLength = movieLength ?: 0,
     )
 }
 

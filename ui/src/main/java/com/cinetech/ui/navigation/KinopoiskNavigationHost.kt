@@ -15,7 +15,7 @@ fun KinopoiskNavigationHost(
 ) {
     NavHost(
         navController = navHostController,
-        startDestination = Screen.Film(1L)
+        startDestination = Screen.Main
     ) {
         composable<Screen.Main> {
             MainScreen(

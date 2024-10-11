@@ -35,7 +35,7 @@ interface MovieService {
 
 
     @GET("/v1.4/movie/{id}")
-    suspend fun loadMovieById(@Path("id") id: Int): ApiMovieDto
+    suspend fun loadMovieById(@Path("id") id: Long): ApiMovieDto
 
     @GET("/v1.4/review")
     suspend fun loadCommentsByMovieId(

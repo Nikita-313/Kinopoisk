@@ -1,15 +1,18 @@
 package com.cinetech.domain.models
 
 data class Movie(
-    val id: Long? = null,
-    val name: String? = null,
-    val year: Int? = null,
-    val ageRating: Int? = null,
-    val countries: List<String>? = null,
-    val posterUrl: String? = null,
-    val kpRating: Double? = null,
-    val shortDescription: String? = null,
-    val description: String? = null,
-    val similarMovies: List<LinkedMovie>? = null,
-    val kpVotesNumber:Int? = null,
+    val id: Long,
+    val name: String,
+    val year: Int,
+    val ageRating: Int,
+    val countries: List<String>,
+    val posterUrl: String?,
+    val kpRating: Double,
+    val shortDescription: String,
+    val description: String,
+    val similarMovies: List<LinkedMovie>,
+    val kpVotesNumber: Int,
+    val enName: String,
+    val movieLength:Int,
 )
+
